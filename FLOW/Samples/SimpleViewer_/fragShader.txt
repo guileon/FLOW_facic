@@ -1,0 +1,52 @@
+uniform samplerCube myTexture;
+uniform vec3 worldEyePos;
+uniform vec3 worldLightPos;
+varying vec3 worldVertPos;
+varying vec3 N;
+varying vec4 colour;
+varying vec4 cameraVertPos;
+
+float3 phong(float ndotl, float ndoth, vec4 color)
+{
+	vec4 diffuse = ndotl*color;
+	vec4 specular = pow(ndoth,80) * vec4(1.0);
+	return diffuse + specular;
+}
+
+float4 diffusePhong(float ndotl, vec4 color)
+{
+	return ndotl*color;
+}
+
+float schlickFresnel(float n1, float n2, float ndoth)
+{
+   float Rz = pow((n1-n2)/(n1+n2),2);
+   return Rz + (1-Rz)*pow((1-ndoth),5);
+}
+
+void main (void) 
+{ 
+
+   vec3 L = normalize(worldLightPos - worldVertPos);
+   vec3 V = normalize(worldEyePos - worldVertPos);
+   vec3 H = normalize(V+L);
+   vec3 R = normalize(-V + 2*N*dot(N,V));
+
+   float ndotl = max(dot(N,L),0);
+   float ndoth = max(dot(N,H),0);
+   float ndotr = max(dot(N,normalize(R+V)),0);
+
+
+   float fresnel = clamp(schlickFresnel(1.3,1,ndotr),0.0,1.0)*1.8;
+   //float fresnel = 1-ndotr;
+   //float fresnel = 0.8;
+   //vec4 phongTerm = diffusePhong(ndotl,vec4(0.2,0.3,0.8,1.0));
+   vec4 phongTerm = diffusePhong(ndotl,vec4(1,1,1,1.0));
+
+
+   //gl_FragColor = textureCube(myTexture,R);
+   //gl_FragColor = (1-fresnel)*phongTerm+fresnel*textureCube(myTexture,R);
+   //gl_FragColor = phongTerm;
+   gl_FragColor = vec4(1,0,0,1);
+
+}

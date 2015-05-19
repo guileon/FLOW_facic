@@ -1,0 +1,31 @@
+varying vec3 N;
+varying vec3 worldVertPos;
+varying vec4 cameraVertPos;
+
+uniform float zstrength;
+uniform mat3 sobelX = mat3(-1,-2,-1 , 0,0,0 , 1,2,1);
+uniform mat3 sobelY = mat3(-1,0,1 , -2,0,2 , -1,0,1);
+
+void main(void)
+{
+
+
+	mat3 surroundings;
+	surroundings[0] = vec3(gl_Color.x,gl_Normal.x,gl_Color.y); // column 1, (i-1,j-1);(i-1,j);(i-1,j+1)
+	surroundings[1] = vec3(gl_Normal.z,gl_Vertex.z,gl_Vertex.w); // column 2, (i,j-1);(i,j);(i,j+1)
+	surroundings[2] = vec3(gl_Color.z,gl_Normal.y,gl_Color.w); // column3, (i+1,j-1);(i+1,j);(i+1,j+1)
+
+	mat3 mX = matrixCompMult(sobelX,surroundings);
+	mat3 mY = matrixCompMult(sobelY,surroundings);
+
+	N.x = mX[0][0] + mX[0][1] + mX[0][2] + mX[1][0] + mX[1][1] + mX[1][2] + mX[2][0] + mX[2][1] + mX[2][2];
+	N.y = mY[0][0] + mY[0][1] + mY[0][2] + mY[1][0] + mY[1][1] + mY[1][2] + mY[2][0] + mY[2][1] + mY[2][2];
+	N.z = zstrength;
+	N = normalize(N);
+
+	gl_Vertex.w = 1.0;
+	worldVertPos = gl_Vertex.xyz;
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+
+
+}
