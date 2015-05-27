@@ -47,6 +47,7 @@ void main (void)
    //gl_FragColor = textureCube(myTexture,R);
    //gl_FragColor = (1-fresnel)*phongTerm+fresnel*textureCube(myTexture,R);
    //gl_FragColor = phongTerm;
-   gl_FragColor = vec4(1,0,0,1);
+   //gl_FragColor = vec4(1,0,0,1);
+   gl_FragColor = gl_Color;
 
 }

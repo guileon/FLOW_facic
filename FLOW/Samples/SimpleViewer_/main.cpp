@@ -16,11 +16,7 @@
 GLEW AND SHADER LOADING....
 */
 
-GLint texUnitLoc;
 
-GLuint m_texname;
-GLuint m_texname2;
-GLuint textureID;
 
 
 Screen dScreen;
@@ -32,21 +28,20 @@ int * fscreen;
 openni::VideoFrameRef frame;
 openni::VideoFrameRef frameColor;
 
-#define DATA_SIZE_X 512
-#define DATA_SIZE_Y 512
+
 
 int result[640][640];
-GLubyte data[DATA_SIZE_X][DATA_SIZE_Y][4];
+
 GLint eyePosLocation;
 GLint lightPosLocation;
 GLint zstrengthLocation;
+
 int depthw = 640;
 int depthh = 480;
 
-//int sdf[640][640];
-
 int mouse[2];
-float cameraX = 0.0f;
+
+float cameraX = 10000.0f;
 float cameraY = 0.0f;
 float cameraZ = 0.0f;
 
@@ -54,14 +49,14 @@ float cameraZ = 0.0f;
 #define D(i,j) (200+(float)-fscreen[i+j*depthw])
 #define C(i,j) (screen[i+j*depthw])
 
-// VARIABLES
+// VARIABLES THIS PART IS RIDICULOUS, EVERYTHING IS
 float viewAngle = 0;
 
 bool isDrawFace = true;
 bool isDrawColor = true;
 float cval =18000;
 float zstrength =20; // normal z strength
-int maxDistance= 1000;
+int maxDistance= 100000;
 int offset_ = 3;
 #define MAX_DISTANCE maxDistance // max viewing distance
 #define OFFSET offset_ // offset in point sampling
@@ -76,52 +71,6 @@ float lightPosition[4] = { -10000,-10000,-100, 1 };
 #define Z 2
 #define W 3
 #define ZSTRENGTH zstrength
-
-/*
-CUBEMMAPPING
-*/
-
-
-bool load_cube_map_side (GLuint texture, GLenum side_target) 
-{
-  glBindTexture (GL_TEXTURE_CUBE_MAP, texture);
-  
-  // copy image data into 'target' side of cube map
-	  glTexImage2D (
-		side_target,
-		0,
-		GL_RGBA,
-		DATA_SIZE_X,
-		DATA_SIZE_X,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		data );
-  return true;
-}
-
-void create_cube_map ( GLuint* tex_cube) 
-{
-  // generate a cube-map texture to hold all the sides
-  glActiveTexture (GL_TEXTURE0);
-  glGenTextures (1, tex_cube);
-  
-  // load each image and copy into a side of the cube-map texture
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
-    load_cube_map_side (*tex_cube, GL_TEXTURE_CUBE_MAP_POSITIVE_X);
-  // format cube map texture
-  glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-}
-
-
 
 
 // function that updates the sensor data
@@ -304,74 +253,6 @@ void drawVertex(int i, int j, int offset=1)
 	}
 }
 
-// draws a face, calculating the normal for each vertex
-void drawFaceTest(int i, int j, int offset=1, float distance=50)
-{
-	//FIRST TRIANGLE
-	glBegin(GL_TRIANGLES);
-
-	if(abs(getDepth(i,j)-getDepth(i+offset,j+offset))<distance)
-	{
-		drawVertex(i,j,offset);
-	}
-	if(abs(getDepth(i,j)-getDepth(i+offset,j))<distance)
-	{
-		drawVertex(i+offset,j,offset);
-	}
-
-	if(abs(getDepth(i+offset,j)-getDepth(i+offset,j+offset))<distance)
-	{
-		drawVertex(i+offset,j+offset,offset);
-	}
-	glEnd();
-	//SECOND TRIANGLE
-	glBegin(GL_TRIANGLES);
-
-	if(abs(getDepth(i,j)-getDepth(i+offset,j+offset))<distance)
-	{
-		drawVertex(i+offset,j+offset,offset);
-	}
-
-	if(abs(getDepth(i+offset,j+offset)-getDepth(i,j+offset))<distance)
-	{
-		drawVertex(i,j+offset,offset);
-	}
-
-	if(abs(getDepth(i,j)-getDepth(i,j+offset))<distance)
-	{
-		drawVertex(i,j,offset);
-	}
-	glEnd();
-}
-
-void drawFace(int i, int j, int offset=1)
-{
-	//FIRST TRIANGLE
-	glBegin(GL_TRIANGLES);
-
-	//setColor3f(i,j);
-	drawVertex(i,j,offset);
-
-	//setColor3f(i+offset,j);
-	drawVertex(i+offset,j,offset);
-
-	//setColor3f(i+offset,j+offset);
-	drawVertex(i+offset,j+offset,offset);
-	glEnd();
-	//SECOND TRIANGLE
-	glBegin(GL_TRIANGLES);
-
-	//setColor3f(i+offset,j+offset);
-	drawVertex(i+offset,j+offset,offset);
-
-	//setColor3f(i,j+offset);
-	drawVertex(i,j+offset,offset);
-
-	//setColor3f(i,j);
-	drawVertex(i,j,offset);
-	glEnd();
-}
-
 int step = 0;
 #define MAX_STEP 60
 #define KDEPTH 1000
@@ -498,6 +379,20 @@ LINKING
 
 
 GLuint textureName;
+
+/**************************************************************************************************************
+
+LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI LEIA AQUI
+
+***************************************************************************************************************/
+
+
+/*
+LE ESSA PARTE, TEM TUDO QUE PRECISA PRA USAR
+AQUI ELE TA LENDO A PROFUNDIDADE E A COR PRA DESENHAR NA TELA
+É SÓ REUTILIZAR
+BEIJOS
+*/
 void display()
 {
 	// Clear Screen and Depth Buffer
@@ -516,71 +411,32 @@ void display()
 	lightPosition[Y] = -(mouse[Y]-240);
 
 	draw();
-	float cameraCalibrateX=0;
-	float cameraCalibrateY=0;
 
-	glUseProgram(program);
-
+	//glUseProgram(program);
+	/*
 	glUniform3f(eyePosLocation,cameraX,cameraY,cameraZ);
 	glUniform3f(lightPosLocation,lightPosition[X],lightPosition[Y],lightPosition[Z]);
 	glUniform1f(zstrengthLocation,zstrength);
-
+	*/
 	glBegin(GL_POINTS);
 	for(int i=0 ; i<depthw-1 ; i+=OFFSET)
 	{
 		for(int j=0 ; j<depthh-1 ; j+=OFFSET)
 		{
+			float point[3] = {(i-depthw/2),(depthh/2-j),getDepth(i,j)};
 
-			/*
-			if(isDrawFace)
-				drawFaceTest(i,j,OFFSET,70);
-			else
-				drawFace(i,j,OFFSET);
-				*/
-			drawVertex(i,j,OFFSET);
+			glColor3f(
+				((float)getColor(i,j).r)/255,
+				((float)getColor(i,j).g)/255,
+				((float)getColor(i,j).b)/255);
+			glVertex3f(point[X],point[Y],point[Z]);
 		}
 		
 	}
 	glEnd();
-
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-	glBindTexture(GL_TEXTURE_2D, m_texname2);
 	
 	
 	glUseProgram(0);
-	glColor4f(1.0,1.0,1.0,1.0);
-	float mtc = 1.0f;
-	/*
-	glBegin(GL_QUADS);
-	 glTexCoord2f(0.0f, 0.0f);glVertex3f(-640,640,-1000);
-	 glTexCoord2f(mtc, 0.0f);glVertex3f(640,640,-1000);
-	 glTexCoord2f(mtc, mtc);glVertex3f(640,-640,-1000);
-	 glTexCoord2f(0.0f, mtc);glVertex3f(-640,-640,-1000);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	 glTexCoord2f(0.0f, 0.0f);glVertex3f(-640,640,1000);
-	 glTexCoord2f(mtc, 0.0f);glVertex3f(-640,640,-1000);
-	 glTexCoord2f(mtc, mtc);glVertex3f(-640,-640,-1000);
-	 glTexCoord2f(0.0f, mtc);glVertex3f(-640,-640,1000);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	 glTexCoord2f(0.0f, 0.0f);glVertex3f(640,640,1000);
-	 glTexCoord2f(mtc, 0.0f);glVertex3f(640,640,-1000);
-	 glTexCoord2f(mtc, mtc);glVertex3f(640,-640,-1000);
-	 glTexCoord2f(0.0f, mtc);glVertex3f(640,-640,1000);
-	glEnd();
-
-	glBegin(GL_QUADS);
-	 glTexCoord2f(0.0f, 0.0f);glVertex3f(-640,640,1000);
-	 glTexCoord2f(mtc, 0.0f);glVertex3f(640,640,1000);
-	 glTexCoord2f(mtc, mtc);glVertex3f(640,-640,1000);
-	 glTexCoord2f(0.0f, mtc);glVertex3f(-640,-640,1000);
-	glEnd();
-	*/
-
 	glutSwapBuffers();
 }
 int frameCount =0;
@@ -669,7 +525,7 @@ void initOpenGL(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(640, 480);
-	glutCreateWindow ("Kinect");
+	glutCreateWindow ("Spogr Spohr");
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 
@@ -694,7 +550,7 @@ void initOpenGL(int argc, char **argv)
  
 	// set up a perspective projection matrix
 	
-	float vfov = 45.0f;
+	float vfov = 45;
 	float aspect = 1;
 	gluPerspective(vfov,aspect,0.5,20000);		
  
@@ -709,84 +565,12 @@ void initOpenGL(int argc, char **argv)
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 
-	//glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_COLOR_MATERIAL);
-	
-
-	GLfloat lightDiffuse[] = {1.0, 1.0, 1.0}; 
-	GLfloat lightSpecular[] = {1.0, 1.0, 1.0};
-	GLfloat lightEmissive[] = {0.0, 0.0, 0.0};
-	
-	GLfloat diffuse[] = {0.0, 0.0, 0.0}; 
-	GLfloat specular[] = {0.0, 0.0, 0.0};
-	GLfloat emissive[] = {0.0, 0.0, 0.0};
-	
-	
-	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightEmissive);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
-	
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, emissive);
 	
 	setupGlew();
 
 
-
-	openni::RGB888Pixel aux;
-	draw();
-	for(int i=0 ; i<DATA_SIZE_X ; i+=1)
-		for(int j=0 ; j<DATA_SIZE_Y ; j+=1)
-		{
-			aux = getColor(j,i);
-			data[i][j][0] = aux.r;
-			data[i][j][1] = aux.g;
-			data[i][j][2] = aux.b;
-			data[i][j][3] = 255;
-		}
-	create_cube_map(&m_texname);
-
-	glGenTextures(1, &m_texname2);
-	glBindTexture(GL_TEXTURE_2D, m_texname2);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-
-	for(int i=0 ; i<DATA_SIZE_X ; i+=1)
-	for(int j=0 ; j<DATA_SIZE_Y ; j+=1)
-	{
-		aux = getColor(j,i);
-		data[i][j][0] = (255-aux.r) /2;
-		data[i][j][1] = (255-aux.g) /2;
-		data[i][j][2] = (255-aux.b) /2;
-		data[i][j][3] = 255;
-	}
-
-	  glTexImage2D (
-		GL_TEXTURE_2D,
-		0,
-		GL_RGBA,
-		DATA_SIZE_X,
-		DATA_SIZE_X,
-		0,
-		GL_RGBA,
-		GL_UNSIGNED_BYTE,
-		data );
-
-
 	useShader("fragShader.txt","vertShader.txt");
 
-
-	glGenTextures(1,&textureID);
-
-	GLint texUnitLoc = glGetUniformLocation(program, "texUnit");
-	glProgramUniform1i(program, texUnitLoc , 0);
-	glActiveTexture(GL_TEXTURE0);
 
 	eyePosLocation = glGetUniformLocation(program, "worldEyePos");
 	lightPosLocation = glGetUniformLocation(program, "worldLightPos");
@@ -809,9 +593,6 @@ int main(int argc, char** argv)
 	screen = new openni::RGB888Pixel[depthw * depthh];
 	fscreen = new int[depthw * depthh];
 
-	for(int i=0 ; i<640 ; i++)
-		for(int j=0 ; j<640 ;j++)
-			result[i][j] = 0;
 
 	for(unsigned int i=0 ; i<(unsigned int)depthw * depthh ; i++)
 	{
